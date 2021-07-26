@@ -1,17 +1,21 @@
 from copy import copy, deepcopy
 from itertools import groupby
+from django.shortcuts import render
+from speakers.forms import InterventionForm, MotionForm
+from motions.models import Motion
+from django.conf import settings
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, FormView, TemplateView
-
+from django.views import View
 from speakers.models import Participant
 from utils.mixins import OrganisationManagerMixin, OrganisationMixin
 
 from .forms import CreateMeetingForm, CreateOrganisationForm
-from .models import Meeting, Point, Session
-
+from .models import Meeting, MemberRequests, Point, Session
+from .consumers.meeting_consumer import member_request_mapping
 
 class BreakRecursionException(Exception):
 	pass
@@ -32,6 +36,9 @@ class CreateMeetingView(OrganisationManagerMixin, FormView):
 		self.meeting.participant_set.create(name=user.username, user=user, role=Participant.ROLE_PRESIDENT)
 		return super().form_valid(form)
 
+	def get_success_url(self):
+		return reverse('organisations:meeting-agenda', kwargs={'organisation_slug': self.organisation.slug, 'meeting_slug': self.meeting.slug})
+
 
 class CreateOrganisationView(LoginRequiredMixin, CreateView):
 	template_name = 'create-organisation.html'
@@ -43,7 +50,7 @@ class CreateOrganisationView(LoginRequiredMixin, CreateView):
 		return kwargs
 
 	def get_success_url(self):
-		return reverse('organisation-homepage', kwargs={'organisation_slug': self.object.slug})
+		return reverse('organisations:organisation-homepage', kwargs={'organisation_slug': self.object.slug})
 
 
 class OrganisationHomepageView(OrganisationMixin, TemplateView):
@@ -54,13 +61,14 @@ class AgendaView(OrganisationMixin, TemplateView):
 	template_name = 'agenda.html'
 
 	def get_page_title(self):
-		return _("Agenda for %(meeting)s") % {'meeting': self.meeting.name}
+		meeting_name = self.meeting.name if getattr(self, 'meeting', None) else ""
+		return _("Agenda for %(meeting)s") % {'meeting': meeting_name}
 
 	@property
 	def meeting(self):
 		if not hasattr(self, '_meeting'):
-			self._meeting = Meeting.objects.select_related('organisation').get(
-				organisation=self.organisation, slug=self.kwargs['meeting_slug'])
+			self._meeting = Meeting.objects.select_related('organisation').filter(
+				organisation=self.organisation, slug=self.kwargs['meeting_slug']).first()
 		return self._meeting
 
 	def create_point_tree(self):
@@ -146,5 +154,41 @@ class AgendaView(OrganisationMixin, TemplateView):
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)
 		context['meeting'] = self.meeting
+		participant = Participant.objects.filter(user=self.request.user).first()
+		context['participant'] = participant
+		motion = getattr(self.meeting, 'motion', None)
+		motion_name = motion.get_proposition_display() if motion else ''
+		context['proposition_name'] = motion_name
+		context['motion_id'] = motion.id if motion else ''
+		member_requests = MemberRequests.objects.filter(meeting=self.meeting, is_served=False)	
+		member_request_phrases = []
+		for member_request in member_requests:
+			user = member_request.participant.user
+			participant_name = f'{user.first_name} {user.last_name}'
+			member_request_phrases.append(
+				{
+					'action': f'{participant_name} {member_request_mapping.get(member_request.request_type)}',
+					'participant_name': participant_name,
+					'member_request_id': member_request.id
+				}
+			)
+		context['intervention_form'] = InterventionForm()
+		context['motion_form'] = MotionForm()
+
+		context['member_requests'] = member_request_phrases
+		context['joinees'] = self.meeting.joinees
+		
 		context['sessions'] = self.get_sessions()
 		return context
+
+
+class HomeView(TemplateView):
+	template_name = 'home.html'
+
+	def get(self, request, *args, **kwargs):
+		context = {}
+		if not request.user.is_anonymous:
+			context['meetings'] = Meeting.objects.filter(participant__user=request.user)
+		else:
+			context['meetings'] = None
+		return render(request, self.template_name, context)

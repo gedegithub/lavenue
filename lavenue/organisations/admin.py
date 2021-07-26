@@ -53,3 +53,5 @@ class PointAdmin(admin.ModelAdmin):
 		elif db_field.name == "parent":
 			kwargs['queryset'] = Point.objects.all().select_related('session__meeting__organisation')
 		return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+admin.site.register(MemberRequests)

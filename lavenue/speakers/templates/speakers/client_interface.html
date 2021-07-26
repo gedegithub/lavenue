@@ -1,0 +1,24 @@
+<div class='card client-interface'>
+    <div class='card-header el-head text-center'>{{request.user.first_name}} {{request.user.last_name}}</div>
+</br>
+</br>
+    <div class='card-body'>
+        <div class="row">
+            <div data-type='speak' class="btn user-action text-center left-sp-el el-blue">Turn to Speak</div>
+            {% if participant.voting %}
+                <div data-type='vote' class="btn vote-action user-action text-center right-sp-el-second pull-right el-red" style='background:red; color:black'>Vote</div>
+            {% endif %}
+        </div>
+        </br>
+        <div class='row'>
+            <div data-type='order' class="btn user-action text-center left-sp-el el-green">Order</div>
+            <div data-type='privilege' class="btn user-action text-center right-sp-el el-red">Privilege</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).on('click', '.vote-action', function(){
+        $('.vote-btn').prop('disabled', false);
+    })
+</script>

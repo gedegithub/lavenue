@@ -1,0 +1,22 @@
+<div class='card summary'>
+    <div class='card-header'>Summary</div>
+    <div class='card-body'>
+            <div class='row text-center'><strong>Date: </strong><p class='date'></p></div>
+        <div class='row'>
+            <div class='presences'>
+                <strong>Members</strong>
+                <div class='presence-list'>
+                {% for joinee in joinees %}
+                    <p class='participant-{{joinee}}'>{{joinee}}</p>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% if participant.role == 's' or participant.role == 'p' %}
+            <div class='propositions'>
+                <strong>Passed Propositions</strong>
+                <div class='proposition-list'></div>
+            </div>
+        {% endif %}
+    </div>
+</div>

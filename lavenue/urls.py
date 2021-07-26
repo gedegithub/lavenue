@@ -17,23 +17,20 @@ import debug_toolbar
 from django.contrib import admin
 from django.urls import include, path
 
-from organisations.views import AgendaView, CreateMeetingView, CreateOrganisationView, OrganisationHomepageView
-from users.views import CreateAccountView
+from organisations.views import HomeView
+from users import urls as user_urls
+
+from organisations import urls as organization_urls
+# from speakers.views import intervention_create_view, motion_create_view, vote_create_view
 
 urlpatterns = [
 	path('admin/', admin.site.urls),
-    path('accounts/', include([
-        path('', include('django.contrib.auth.urls')),
-        path('create/', CreateAccountView.as_view(), name='create-account'),
-    ])),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include(user_urls)),
 	path('__debug__/', include(debug_toolbar.urls)),
-
-    path('create-organisation/', CreateOrganisationView.as_view(), name='create-organisation'),
-    path('<slug:organisation_slug>/', include([
-        path('', OrganisationHomepageView.as_view(), name='organisation-homepage'),
-        path('create-meeting/', CreateMeetingView.as_view(), name='create-meeting'),
-        path('<slug:meeting_slug>/', include([
-            path('agenda/', AgendaView.as_view(), name='meeting-agenda'),
-        ])),
-    ])),
-]
+    path('organisations/', include(organization_urls)),
+    path('', HomeView.as_view(), name='landing-view'),
+    # path('secretary/', intervention_create_view),
+    # path('secretary/', motion_create_view),
+    # path('secretary/', vote_create_view),
+] 

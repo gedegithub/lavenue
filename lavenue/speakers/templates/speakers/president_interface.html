@@ -1,0 +1,15 @@
+<div class='card president-interface'>
+    <div class='text-center card-header' style="background-color: #0000ff52;">President</div>
+    <div class='member-requests'>
+        {% for member_request in member_requests %}
+            <p class='text-center member_request_item para-font-size' 
+					style='padding:5px;background:grey'
+					data-name='{{member_request.participant_name}}'
+                    data-member-request-id='{{member_request.member_request_id}}'
+                    >
+            {{member_request.action}}
+            </p>
+        {% endfor %}
+    
+    </div>
+</div>

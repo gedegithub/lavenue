@@ -1,3 +1,7 @@
+from django.db.models.deletion import SET_NULL
+from django.db.models.fields.json import JSONField
+from motions.models import Motion
+from speakers.models import Participant
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -25,7 +29,10 @@ class Meeting(models.Model):
 	name = models.CharField(max_length=100, verbose_name=_("name"))
 	slug = models.SlugField(max_length=20, unique=True, verbose_name=_("slug"))
 	code = models.CharField(max_length=1, choices=get_rulebook_choices(), default=Lesperance.prefix, verbose_name=_("code"))
-
+	motion = models.ForeignKey(Motion, related_name='motion_meeting', default=None, null=True, blank=True,
+							on_delete=models.SET_NULL)
+	joinees = JSONField(default=list, null=True, blank=True)
+	
 	def __str__(self):
 		return "%s: %s" % (self.organisation, self.name)
 
@@ -83,3 +90,20 @@ class Point(models.Model):
 		if not hasattr(self, '_children'):
 			self._children = type(self).objects.filter(parent=self).order_by('seq')
 		return self._children
+
+
+class MemberRequests(models.Model):
+	Request_CHOICES = (
+		('speak','speak'),
+		('order','order'),
+		('privilege','privilege'),
+	)
+
+	participant = models.ForeignKey(Participant, on_delete=models.SET_NULL, 
+									related_name='participant_request',
+									default=None, null=True)
+	is_served = models.BooleanField(default=False)
+	is_active = models.BooleanField(default=False)
+	request_type = models.CharField(choices=Request_CHOICES, max_length=50)
+	meeting = models.ForeignKey(Meeting, on_delete=SET_NULL, related_name='meeting_member_requests',
+	                            default=None, null=True, blank=True)

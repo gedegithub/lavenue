@@ -1,16 +1,220 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans trimmed with meeting=meeting.name %}Agenda for {{ meeting }}{% endblocktrans %}{% endblock %}
+{% block title %}
+	{% blocktrans trimmed with meeting=meeting.name %}Agenda for {{ meeting }}{% endblocktrans %}
+{% endblock %}
 
 {% block content %}
-<h1>{{ meeting.name }}—{{ meeting.organisation.name }}</h1>
-<p><i>{% trans "Permalink:" %} <a href="{{ request.path }}">{{ request.build_absolute_uri }}</a></i></p>
 
+<p><i>{% trans "Permalink:" %} <a href="{{ request.path }}">{{ request.build_absolute_uri }}</a></i></p>
+<input type='hidden' value="{{request.user.first_name}} {{request.user.last_name}}" class='participant_name' />
+<input type='hidden' value="{{participant.role}}" class='participant_role' />
+<input type='hidden' value="{{request.user.id}}" class='logged_in_user_id' />
+<input type='hidden' value="{{motion_id}}" class='motion_id' />
+
+<div class='text-center'>
+	<h2>{{ meeting.name }}—{{ meeting.organisation.name }}</h2>
+</div>
+
+<div class='row meet'>
+	{% include 'speakers/president_interface.html' %}
+	{% include 'speakers/client_interface.html' %}
+	{% include 'speakers/actions_interface.html' %}
+	{{ meeting_slug|json_script:"meeting-slug" }}
+	{% if participant.voting %}
+		{% include 'motion_section.html' %}
+	{% endif %}
+</div>
+<div class='row'>
+	{% if participant.role == 's' %}
+		{% include 'speakers/secretary_interface.html' %}
+	{% endif %}
+
+</div>
+	{% include 'summary.html' %}
+
+{% if participant.role == 'p' %}
+	<button class='text-center btn end-meet-btn'>End Meet</button>
+{% endif %}
 {% for session in sessions %}
 <h2 id="session-{{ forloop.counter }}">{{ session.start }}</h2>
 <ol>
 	{% include "point_list.html" with points=session.points %}
 </ol>
 {% endfor %}
+<script>
+	const meetingSlug = JSON.parse(document.getElementById('meeting-slug').textContent);
+
+	const meetingSocket = new WebSocket(
+		'ws://'
+		+ window.location.host
+		+ '/ws/meeting/'
+		+ meetingSlug
+		+ '/'
+	);
+
+	meetingSocket.onclose = function (e) {
+		console.error('Meeting socket closed unexpectedly');
+	};
+
+	$(document).on('submit', '#intervention-form', function (event) {
+		event.preventDefault();
+		var form = $(this)[0].elements;
+		intervention_data = {}
+		for (var i = 0, element; element = form[i++];) {
+			if (element.type != 'submit') {
+				intervention_data[element.name] = element.value;
+			}
+		}
+		console.log(intervention_data)
+		meetingSocket.send(JSON.stringify({
+			'sender': 'secretary',
+			'form_type': 'intervention',
+			'participant_id': $('.logged_in_user_id').val(),
+			'intervention_form': intervention_data
+		}));
+	})
+
+
+	$(document).on('submit', '#motion-form', function (event) {
+		event.preventDefault();
+		var form = $(this)[0].elements;
+		motion_data = {}
+		for (var i = 0, element; element = form[i++];) {
+			if (element.type != 'submit') {
+				motion_data[element.name] = element.value;
+			}
+		}
+		meetingSocket.send(JSON.stringify({
+			'sender': 'secretary',
+			'form_type': 'motion',
+			'participant_id': $('.logged_in_user_id').val(),
+
+			'motion_form': motion_data
+		}));
+	})
+
+	$(document).ready(function () {
+		meetingSocket.onopen = () => meetingSocket.send(
+			JSON.stringify({
+				'member_request_type': 'joining',
+				'participant_id': $('.logged_in_user_id').val(),
+				'meeting_slug': meetingSlug,
+				'participant_name': $('.participant_name').val()
+			})
+		);
+		let today = new Date().toISOString().slice(0, 10)
+		$('.date').text(" " + today);
+	})
+
+
+	//Client Interface
+	$(document).on('click', '.user-action', function () {
+		$(this).remove();
+		if ($(this).data('type') != 'vote') {
+			meetingSocket.send(JSON.stringify({
+				'sender': 'participant',
+				'member_request_type': $(this).data('type'),
+				'participant_id': $('.logged_in_user_id').val(),
+				'participant_name': $('.participant_name').val(),
+				'meeting_slug': meetingSlug
+			}));
+		}
+
+	})
+
+	$(document).on('click', '.vote-btn', function () {
+		meetingSocket.send(
+			JSON.stringify({
+				'member_request_type': 'vote',
+				'participant_id': $('.logged_in_user_id').val(),
+				'meeting_slug': meetingSlug,
+				'request_type': 'vote',
+				'vote_type': $(this).data('vote'),
+				'motion_id': $(".motion_id").val(),
+				'participant_name': $('.participant_name').val()
+			})
+		);
+
+	})
+
+	$(document).on('click', '.member_request_item', function () {
+		if ($(".participant_role").val() === 'p')
+			meetingSocket.send(JSON.stringify({
+				'sender': 'president',
+				'participant_name': $(this).data('name'),
+				'meeting_slug': meetingSlug,
+				'member_request_id': $(this).data('member-request-id')
+			}));
+
+	})
+
+	meetingSocket.onmessage = function (e) {
+		const data = JSON.parse(e.data);
+		if (data.action === 'voted') {
+			if($('.logged_in_user_id').val() == data.participant_id)
+				alert("Vote Submitted")
+		}
+		else if (data.action === 'end_meet') {
+			if(data.pass_proposition === true)
+				$('.proposition-list').append(
+					`<p>${data.passed_proposition_name}</p>`
+				);
+
+		}
+		else if (data.action === 'form_submission'){
+			if($('.logged_in_user_id').val() === data.participant_id)
+			{
+				if(data.form_error === true){
+
+					alert("Invalid Form Data")
+				}
+				else{
+					$(`#${data.form_type}`)[0].reset();
+					alert("Response Submitted")
+				}
+			}
+		}
+		else if (data.action === 'joining') {
+			$('.presence-list').empty();
+			for (let i = 0; i < data.joinees.length; i++) {
+				$('.presence-list').append(`<p>${data.joinees[i]}</p>`)
+			}
+		}
+		else {
+
+			$('.member_request_item').filter(`[data-member-request-id='${data.member_request_id}']`).remove()
+			if (data.sender === 'president') {
+				$('.action-list').append(
+					`<p class='text-center para-text'>${data.action}</p>`
+				)
+			}
+			else {
+				const participant_name = data.participant_name;
+				$('.member-requests').append(
+					`<p class='text-center member_request_item para-text'
+						data-name='${participant_name}'
+						data-member-request-id='${data.member_request_id}'
+					>
+						${data.action}
+					</p>`
+				)
+			}
+		}
+
+	};
+
+	//President Interface
+
+	$(document).on('click', '.end-meet-btn', function () {
+		meetingSocket.send(JSON.stringify({
+			'sender': 'president',
+			'member_request_type': 'end_meet',
+			'participant_name': $(this).data('name'),
+			'motion_id': $(".motion_id").val(),
+			'member_request_id': $(this).data('member-request-id')
+		}));
+	})
+</script>
 {% endblock %}

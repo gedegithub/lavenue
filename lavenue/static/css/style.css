@@ -1,0 +1,129 @@
+.president-interface{
+	width: 150px;
+	overflow: auto;
+}
+
+.summary {
+    position:relative;
+}
+
+.para-font-size{
+    font-size: 14px;
+}
+
+.summary {
+    position:absolute;
+    bottom: 20px;
+    right: 0;
+    margin-right: 1%;
+    height: 200px;
+    width:250px;
+	overflow:auto;
+
+}
+.para-text {
+    font-size: 12px;
+	background:#808080cc;
+	padding: 5px
+
+}
+.action {
+    position: absolute;
+    right: 0;
+	margin-right:1% !important;
+    height: 250px;
+	width: 230px;
+	overflow: auto;
+}
+.client-interface{
+    margin-left: 200px;
+	width: 400px
+}
+.meet{
+	padding: 2%
+}
+.motion-section{
+	margin-left: 50px
+}
+
+.el-green{
+    background-color: green;
+}
+.el-blue{
+    background-color: #0000ff52;
+}
+.el-red{
+    background-color: red;
+}
+.top-head{
+    background-color: gainsboro;
+    padding: 1%;
+}
+.left-sp-el{
+    color: black;
+    float: left;
+    padding: 2%;
+}
+.right-sp-el{
+    color: black;
+    float: right;
+    padding: 2%;
+    margin-left: 50%;
+}
+
+.el-green{
+    background-color: green;
+}
+.el-blue{
+    background-color: #0000ffa6;
+}
+.el-red{
+    background-color: red;
+}
+.top-head{
+    background-color: gainsboro;
+    padding: 1%;
+}
+.left-sp-el{
+    color: black;
+    float: left;
+    padding: 2%;
+}
+.right-sp-el{
+    color: black;
+    float: right;
+    padding: 2%;
+    margin-left: 64%;
+}
+
+.right-sp-el-second{
+    color: black;
+    float: right;
+    padding: 2%;
+    margin-left: 56%;
+}
+
+.btn-wi {
+    padding: 5px;
+    margin-bottom: 5px;
+    margin-left:45px !important
+}
+.btn-second {
+    padding: 5px !important;
+    margin-left: 5px !important;
+    margin-bottom: 8px;
+}
+
+.intervention-form{
+    margin-top: 50px;
+    overflow: auto;
+}
+
+.motion-form{
+    margin-top: 50px;
+    overflow: auto;
+    margin-left: 50px;
+}
+.end-meet-btn{
+    margin-left:50%
+}

@@ -1,3 +1,4 @@
+from django.db.models.query_utils import refs_expression
 from django.db import models
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
@@ -11,13 +12,17 @@ class Motion(models.Model):
 	seconder = models.ForeignKey('speakers.Participant', models.PROTECT, null=True, blank=True, related_name='seconded_set',
 		verbose_name=_("seconder"))
 
-	point = models.ForeignKey('organisations.Point', models.CASCADE, verbose_name=_("point"))
-	supplants = models.ForeignKey('self', models.CASCADE, verbose_name=_("supplants"))
+	point = models.ForeignKey('organisations.Point', models.CASCADE, verbose_name=_("point"),
+			                 null=True, blank=True, default=None)
+	supplants = models.ForeignKey('self', models.CASCADE, verbose_name=_("supplants"),
+								  default=None, blank=True, null=True)
 
-	proposition = models.CharField(max_length=3, choices=get_all_prop_choices(), verbose_name=_("proposition"))
+	proposition = models.CharField(max_length=3, choices=get_all_prop_choices(), verbose_name=_("proposition"),
+								default=None, blank=True, 
+								null=True)
 	preamble = models.TextField(blank=True, verbose_name=_("preamble"))
-	operative = models.TextField(verbose_name=_("operative clauses"))
-
+	operative = models.TextField(verbose_name=_("operative clauses"), default=None, blank=True, 
+								null=True)
 	def __str__(self):
 		return "%s (%s): %s" % (self.proposer, self.seconder, self.get_proposition_display())
 
@@ -50,7 +55,10 @@ class Vote(models.Model):
 			oppose=Sum('worth', filter=Q(cast=Ballot.VOTE_OPPOSE)),
 			abstain=Sum('worth', filter=Q(cast=Ballot.VOTE_ABSTAIN)))
 		for cast in ['favour', 'oppose', 'abstain']:
-			setattr(self, cast, totals[cast])
+			if totals[cast] != None:
+				setattr(self, cast, totals[cast])
+			setattr(self, cast, 0)
+		self.save()
 
 
 class Ballot(models.Model):
@@ -62,7 +70,7 @@ class Ballot(models.Model):
 		(VOTE_OPPOSE, _("oppose")),
 		(VOTE_ABSTAIN, _("abstain"))
 	)
-	participant = models.ForeignKey('speakers.Participant', models.PROTECT, verbose_name=_("proposer"))
+	participant = models.ForeignKey('speakers.Participant', models.PROTECT, verbose_name=_("proposer"), related_name='ballot')
 	vote = models.ForeignKey(Vote, models.CASCADE, verbose_name=_("vote"))
 	cast = models.CharField(max_length=1, choices=VOTE_OPTIONS, default=VOTE_ABSTAIN, verbose_name=_("cast"))
 	worth = models.PositiveIntegerField(default=1, verbose_name=_("worth"))

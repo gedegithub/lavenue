@@ -5,7 +5,7 @@
 
 {% block content %}
 <h2>{{ organisation.name }}</h2>
-<a href="{% url 'create-meeting' organisation_slug=organisation.slug %}">{% trans "Create Meeting" %}</a>
+<a href="{% url 'organisations:create-meeting' organisation_slug=organisation.slug %}">{% trans "Create Meeting" %}</a>
 
 <ul>
 {% for meeting in organisation.meeting_set.all %}

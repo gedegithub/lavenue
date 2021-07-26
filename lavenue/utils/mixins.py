@@ -27,7 +27,7 @@ class OrganisationMixin(ViewTitlesMixin):
 	@property
 	def organisation(self):
 		if not hasattr(self, "_organisation"):
-			self._organisation = Organisation.objects.get(slug=self.kwargs['organisation_slug'])
+			self._organisation = Organisation.objects.filter(slug=self.kwargs['organisation_slug']).first()
 		return self._organisation
 	
 	def get_context_data(self, **kwargs):

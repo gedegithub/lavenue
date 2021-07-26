@@ -6,7 +6,7 @@
 
 Pour la bonne gestion et sémantique d'assemblée délibérante, *Lavenue* est un logiciel proposé pour faciliter l'utilisation du *Code Lespérance* (CL) et d'automatiser l'application des décisions faites.
 
-## Introduction
+## Contexte
 À la suite des instances de la FAÉCUM qui se déroulaient de manière virtuelle en hiver 2021, des failles importantes avec la capacité de pouvoir tenir ces rencontres sans outils à ces fins ont été soulevées. Ces failles font que c'est plus dur aux participants de pouvoir facilement interagir avec les procédures pour faire des propositions, ainsi que de connaitre l'ordre de parole qui est opaque.
 
 ### But
@@ -15,7 +15,7 @@ Ce logiciel va être basé sur l'internet avec deux grands axes. La première es
 ### Public cible et utilisation
 *Lavenue* pourra être utilisé par les associations étudiantes qui utilisent le *Code Lespérance* ou des codes similaires. Ces associations l'utiliseront durant leurs assemblées par tout parti:
 * les participants pour demander la parole et faire des propositions;
-* la présidence pour accepter des tours de parole et prendre des actions;
+* la présidence pour octroyer des tours de parole et prendre des actions;
 * le secrétariat pour rédiger des sommaires des interventions.
 
 Ce logiciel sera aussi utilisé au préalable par des officiers de l'association afin de mettre un horaire pour l'assemblée.
@@ -47,22 +47,19 @@ La grande assomption ici est qu'il y a une structure informatisable créé par l
 * *Les capacités des observateurs +*
 * Faire des propositions
 * Créer des (sous-)amendements
-* Appuyer des propositions
+* Voter
 
 ### Secrétariat
 * Ajouter des tours de parole au nom d'autrui
 * Écrire des propositions au nom d'autrui
 * Écrire des sommaires pour les interventions
-* Classifier les interventions
+* Voter
 
 ### Présidence
-* *Les capacités du secrétariat +*
-* Accepter des tours de parole
+* Donner des tours de parole
 * Accepter des propositions
-* Donner/retirer attributs aux participants
-* Passer à autres points
 * Fermer la scéance
-* Modifier les modalités des instances
+* Voter
 
 ### Non-participants
 * Voir calendrier des instances
@@ -71,7 +68,7 @@ La grande assomption ici est qu'il y a une structure informatisable créé par l
 
 ## Solutions
 ### Gestion d'assemblée
-Un utilisateur avec la permission technique approprié peut créer un objet `assemblee` avec un nom, puis y ajouter des `seance`s qui comportent une date et heure de début et fin. Lors de la création de l'objet, des liens sont générés avec du hashage pour qu'autres utilisateurs peuvent s'y joindre avec le rôle attribué avec le lien spécifique pour:
+Un utilisateur administrateur peut créer un objet `assemblee` avec un nom, puis y ajouter des `seance`s qui comportent une date et heure de début et fin. Lors de la création de l'objet, des liens sont générés avec du hashage pour qu'autres utilisateurs peuvent s'y joindre avec le rôle attribué avec le lien spécifique pour:
 * Membre/Observateur
 * Présidence
 * Secrétariat

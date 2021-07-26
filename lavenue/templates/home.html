@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block page-title %}{% trans "Home" %}{% endblock %}
+
+{% block content %}
+    <h1>Active Meetings</h1>
+    {% for meeting in meetings %}
+        <p><a href="{{request.build_absolute_uri}}organisations/{{meeting.organisation.slug}}/{{meeting.slug}}/agenda/">{{request.build_absolute_uri}}organisations/{{meeting.organisation.slug}}/{{meeting.slug}}/agenda/</a></p>
+    {% endfor %}
+{% endblock %}
